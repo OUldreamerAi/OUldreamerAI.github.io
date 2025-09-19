@@ -31,7 +31,7 @@
   const btn = document.getElementById('translateBtn');
   btn.disabled = true; // disable at start
 
-  fetch("emoji-dictionary.json")
+  fetch("text_to_emoji.json")
     .then(response => response.json())
     .then(data => {
       data.forEach(item => {
