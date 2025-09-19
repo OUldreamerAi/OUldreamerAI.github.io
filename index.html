@@ -1,81 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>Text-to-Emoji Translator ✨</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f9f9f9;
-      padding: 40px;
-    }
-    h1 {
-      color: #333;
-    }
-    textarea {
-      width: 80%;
-      height: 80px;
-      font-size: 16px;
-      padding: 10px;
-      margin-top: 20px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background: #4CAF50;
-      color: white;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .output {
-      margin-top: 20px;
-      font-size: 20px;
-      color: #444;
-    }
+    body { font-family: Arial, sans-serif; padding: 36px; background:#fafafa; color:#222; text-align:center; }
+    textarea { width:80%; max-width:900px; height:100px; font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; }
+    button { margin-top:12px; padding:10px 16px; font-size:16px; border-radius:6px; cursor:pointer; }
+    .output { margin-top:18px; font-size:20px; min-height:48px; padding:10px; background:white; display:inline-block; max-width:90%; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+    .debug { margin-top:10px; color:#b33; font-size:13px; }
+    .hint { margin-top:6px; color:#666; font-size:13px; }
   </style>
 </head>
 <body>
-  <h1>✨ Text-to-Emoji Translator ✨</h1>
-  <p>Type your text below and click "Translate":</p>
-  
-  <textarea id="inputText" placeholder="e.g. I love pizza and my cat"></textarea><br>
-  <button onclick="translate()">Translate</button>
-  
-  <div class="output" id="output"></div>
-  
+  <h1>✨ Text-to-Emoji Translator</h1>
+  <p>Type text and click <strong>Translate</strong> (or press <em>Ctrl/Cmd + Enter</em>)</p>
+
+  <textarea id="inputText" placeholder="Try: I love pizza and my cat."></textarea><br>
+  <button id="translateBtn">Translate</button>
+
+  <div class="output" id="output">Translated text will appear here.</div>
+  <div class="debug" id="debug" aria-live="polite"></div>
+  <div class="hint">Tip: punctuation (like . , ! ?) is handled — try "The sun, moon, and stars!"</div>
+
   <script>
-    // Dictionary of words -> emojis
+    // -------------------------
+    // emojiMap: word (lowercase) => emoji
+    // Add more words here if you want.
     const emojiMap = {
-      cat: "🐱",
-      dog: "🐶",
-      pizza: "🍕",
-      love: "❤️",
-      happy: "😊",
-      sad: "😢",
-      car: "🚗",
-      fire: "🔥",
-      tree: "🌳",
-      sun: "☀️",
-      moon: "🌙",
-      star: "⭐",
-      computer: "💻",
-      music: "🎵",
-      book: "📖"
+      "cat": "🐱",
+      "dog": "🐶",
+      "pizza": "🍕",
+      "love": "❤️",
+      "happy": "😊",
+      "sad": "😢",
+      "car": "🚗",
+      "fire": "🔥",
+      "tree": "🌳",
+      "sun": "☀️",
+      "moon": "🌙",
+      "star": "⭐",
+      "computer": "💻",
+      "music": "🎵",
+      "book": "📖"
     };
 
-    // Function to translate input text to emojis
-    function translate() {
-      let text = document.getElementById("inputText").value.toLowerCase();
-      let words = text.split(" ");
-      let translated = words.map(word => emojiMap[word] || word);
-      document.getElementById("output").innerText = translated.join(" ");
+    // Helpful small helper to show debug messages on the page
+    function showDebug(msg, isError = true) {
+      const el = document.getElementById('debug');
+      el.textContent = msg || '';
+      if (isError) console.error(msg);
+      else console.log(msg);
     }
+
+    // translateText: replace words with emojis while preserving punctuation
+    function translateText(input) {
+      // Use Unicode-aware word matcher (\p{L} = any letter). The "u" flag enables Unicode.
+      // This will match words like "cat" in "cat." or "cat!" and leave punctuation unchanged.
+      return input.replace(/\b([\p{L}']+)\b/gu, (match) => {
+        // check lowercase key in emojiMap
+        const key = match.toLowerCase();
+        return emojiMap[key] || match; // emoji if found, otherwise original match
+      });
+    }
+
+    // wire up UI after DOM loads
+    (function init() {
+      try {
+        const btn = document.getElementById('translateBtn');
+        const input = document.getElementById('inputText');
+        const output = document.getElementById('output');
+
+        if (!btn || !input || !output) {
+          showDebug('UI elements not found — check element ids in the HTML.', true);
+          return;
+        }
+
+        // button click -> translate
+        btn.addEventListener('click', () => {
+          try {
+            const raw = input.value;
+            const translated = translateText(raw);
+            output.textContent = translated || '(empty)';
+            showDebug('', false); // clear debug on success
+            console.log('Translated:', translated);
+          } catch (err) {
+            showDebug('Translate error: ' + err.message, true);
+          }
+        });
+
+        // keyboard shortcut: Ctrl/Cmd + Enter to translate
+        input.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+          }
+        });
+
+        // optional: auto-clear debug when user focuses input
+        input.addEventListener('focus', () => { showDebug('', false); });
+
+        // initial console log so you know script loaded
+        console.log('Text-to-Emoji script loaded successfully.');
+        showDebug('', false);
+      } catch (err) {
+        showDebug('Initialization failed: ' + err.message, true);
+      }
+    })();
   </script>
 </body>
 </html>
