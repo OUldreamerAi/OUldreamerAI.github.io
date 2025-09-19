@@ -28,21 +28,20 @@
     // -------------------------
     // emojiMap: word (lowercase) => emoji
     // Add more words here if you want.
-    let emojiMap = {};
-    
+   const btn = document.getElementById('translateBtn');
+    btn.disabled = true; // disable at start
+
     fetch("emoji-dictionary.json")
-        .then(response => response.json())
-        .then(data => {
-        // data is a big array of emoji objects
-         // e.g. { "codes": "1F600", "char": "😀", "name": "grinning face", ... }
-         // Let's build our word-to-emoji map
-            data.forEach(item => {
-            // use the emoji name as key, the emoji char as value
-                let key = item.name.toLowerCase().split(" ")[0]; // simple: take first word
-                emojiMap[key] = item.char;
-      });
-      console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
+    .then(response => response.json())
+    .then(data => {
+    data.forEach(item => {
+      let key = item.name.toLowerCase().split(" ")[0];
+      emojiMap[key] = item.char;
     });
+    btn.disabled = false; // enable after loading
+    console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
+    })
+    .catch(err => console.error("Failed to load emoji dictionary:", err));
 
     // Helpful small helper to show debug messages on the page
     function showDebug(msg, isError = true) {
@@ -75,7 +74,7 @@
         btn.addEventListener('click', () => {
           try {
             const raw = input.value;
-            const translated = translateText(raw);
+            const translated = translate(raw);
             output.textContent = translated || '(empty)';
             showDebug('', false); // clear debug on success
             console.log('Translated:', translated);
