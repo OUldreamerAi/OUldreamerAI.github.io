@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Text-to-Emoji Translator ✨</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; padding: 36px; background:#fafafa; color:#222; text-align:center; }
+    body { font-family: Arial, sans-serif; padding: 36px; background:#f1d7b3; color:#6b4400c2; text-align:center; }
     textarea { width:80%; max-width:900px; height:100px; font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; }
     button { margin-top:12px; padding:10px 16px; font-size:16px; border-radius:6px; cursor:pointer; }
     .output { margin-top:18px; font-size:20px; min-height:48px; padding:10px; background:white; display:inline-block; max-width:90%; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
@@ -14,7 +14,7 @@
   </style>
 </head>
 <body>
-  <h1>✨ Text-to-Emoji Translator</h1>
+  <h1>Text-to-Emoji Translator</h1>
   <p>Type text and click <strong>Translate</strong> (or press <em>Ctrl/Cmd + Enter</em>)</p>
 
   <textarea id="inputText" placeholder="Try: I love pizza and my cat."></textarea><br>
@@ -28,23 +28,21 @@
     // -------------------------
     // emojiMap: word (lowercase) => emoji
     // Add more words here if you want.
-    const emojiMap = {
-      "cat": "🐱",
-      "dog": "🐶",
-      "pizza": "🍕",
-      "love": "❤️",
-      "happy": "😊",
-      "sad": "😢",
-      "car": "🚗",
-      "fire": "🔥",
-      "tree": "🌳",
-      "sun": "☀️",
-      "moon": "🌙",
-      "star": "⭐",
-      "computer": "💻",
-      "music": "🎵",
-      "book": "📖"
-    };
+    let emojiMap = {};
+    
+    fetch("emoji-dictionary.json")
+        .then(response => response.json())
+        .then(data => {
+        // data is a big array of emoji objects
+         // e.g. { "codes": "1F600", "char": "😀", "name": "grinning face", ... }
+         // Let's build our word-to-emoji map
+            data.forEach(item => {
+            // use the emoji name as key, the emoji char as value
+                let key = item.name.toLowerCase().split(" ")[0]; // simple: take first word
+                emojiMap[key] = item.char;
+      });
+      console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
+    });
 
     // Helpful small helper to show debug messages on the page
     function showDebug(msg, isError = true) {
@@ -54,16 +52,12 @@
       else console.log(msg);
     }
 
-    // translateText: replace words with emojis while preserving punctuation
-    function translateText(input) {
-      // Use Unicode-aware word matcher (\p{L} = any letter). The "u" flag enables Unicode.
-      // This will match words like "cat" in "cat." or "cat!" and leave punctuation unchanged.
-      return input.replace(/\b([\p{L}']+)\b/gu, (match) => {
-        // check lowercase key in emojiMap
-        const key = match.toLowerCase();
-        return emojiMap[key] || match; // emoji if found, otherwise original match
-      });
-    }
+   function translate() {
+    let text = document.getElementById("inputText").value.toLowerCase();
+    let words = text.split(/\s+/);
+    let translated = words.map(word => emojiMap[word] || word);
+    document.getElementById("output").innerText = translated.join(" ");
+  }
 
     // wire up UI after DOM loads
     (function init() {
