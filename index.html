@@ -25,82 +25,87 @@
   <div class="hint">Tip: punctuation (like . , ! ?) is handled — try "The sun, moon, and stars!"</div>
 
   <script>
-    // -------------------------
-    // emojiMap: word (lowercase) => emoji
-    // Add more words here if you want.
-   const btn = document.getElementById('translateBtn');
-    btn.disabled = true; // disable at start
+  // -------------------------
+  // emojiMap: word (lowercase) => emoji
+  let emojiMap = {};
+  const btn = document.getElementById('translateBtn');
+  btn.disabled = true; // disable at start
 
-    fetch("emoji-dictionary.json")
+  fetch("emoji-dictionary.json")
     .then(response => response.json())
     .then(data => {
-    data.forEach(item => {
-      let key = item.name.toLowerCase().split(" ")[0];
-      emojiMap[key] = item.char;
-    });
-    btn.disabled = false; // enable after loading
-    console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
+      data.forEach(item => {
+        // use full name instead of just first word for better matches
+        let key = item.name.toLowerCase();
+        emojiMap[key] = item.char;
+      });
+      btn.disabled = false; // enable after loading
+      console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
     })
     .catch(err => console.error("Failed to load emoji dictionary:", err));
 
-    // Helpful small helper to show debug messages on the page
-    function showDebug(msg, isError = true) {
-      const el = document.getElementById('debug');
-      el.textContent = msg || '';
-      if (isError) console.error(msg);
-      else console.log(msg);
-    }
-
-   function translate() {
-    let text = document.getElementById("inputText").value.toLowerCase();
-    let words = text.split(/\s+/);
-    let translated = words.map(word => emojiMap[word] || word);
-    document.getElementById("output").innerText = translated.join(" ");
+  // Helpful small helper to show debug messages on the page
+  function showDebug(msg, isError = true) {
+    const el = document.getElementById('debug');
+    el.textContent = msg || '';
+    if (isError && msg) console.error(msg);
+    else if (msg) console.log(msg);
   }
 
-    // wire up UI after DOM loads
-    (function init() {
-      try {
-        const btn = document.getElementById('translateBtn');
-        const input = document.getElementById('inputText');
-        const output = document.getElementById('output');
+  // Translation function
+  function translate(text) {
+    // split into words while keeping punctuation as tokens
+    let tokens = text.toLowerCase().split(/(\b|\s+)/);
+    let translated = tokens.map(tok => {
+      let clean = tok.replace(/[.,!?]/g, ""); // strip punctuation for lookup
+      return emojiMap[clean] || tok;
+    });
+    return translated.join("");
+  }
 
-        if (!btn || !input || !output) {
-          showDebug('UI elements not found — check element ids in the HTML.', true);
-          return;
-        }
+  // wire up UI after DOM loads
+  (function init() {
+    try {
+      const btn = document.getElementById('translateBtn');
+      const input = document.getElementById('inputText');
+      const output = document.getElementById('output');
 
-        // button click -> translate
-        btn.addEventListener('click', () => {
-          try {
-            const raw = input.value;
-            const translated = translate(raw);
-            output.textContent = translated || '(empty)';
-            showDebug('', false); // clear debug on success
-            console.log('Translated:', translated);
-          } catch (err) {
-            showDebug('Translate error: ' + err.message, true);
-          }
-        });
-
-        // keyboard shortcut: Ctrl/Cmd + Enter to translate
-        input.addEventListener('keydown', (e) => {
-          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-            e.preventDefault();
-            btn.click();
-          }
-        });
-
-        // optional: auto-clear debug when user focuses input
-        input.addEventListener('focus', () => { showDebug('', false); });
-
-        // initial console log so you know script loaded
-        console.log('Text-to-Emoji script loaded successfully.');
-        showDebug('', false);
-      } catch (err) {
-        showDebug('Initialization failed: ' + err.message, true);
+      if (!btn || !input || !output) {
+        showDebug('UI elements not found — check element ids in the HTML.', true);
+        return;
       }
-    })();
-  </script>
+
+      // button click -> translate
+      btn.addEventListener('click', () => {
+        try {
+          const raw = input.value.trim();
+          const translated = translate(raw);
+          output.textContent = translated || '(empty)';
+          showDebug('', false); // clear debug on success
+          console.log('Translated:', translated);
+        } catch (err) {
+          showDebug('Translate error: ' + err.message, true);
+        }
+      });
+
+      // keyboard shortcut: Ctrl/Cmd + Enter to translate
+      input.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+
+      // optional: auto-clear debug when user focuses input
+      input.addEventListener('focus', () => { showDebug('', false); });
+
+      console.log('Text-to-Emoji script loaded successfully.');
+      showDebug('', false);
+    } catch (err) {
+      showDebug('Initialization failed: ' + err.message, true);
+    }
+  })();
+</script>
+
 </body>
 </html>
