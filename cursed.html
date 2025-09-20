@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <header>
+    <nav>
+      <a href="index.html">Text → Emoji</a> 
+      <a href="morse.html" aria-current="page">Morse ←→ Text</a>
+      <a href="weird.html">Text → Weird Text</a>
+      <a href="cursed.html">Text → Cursed Text </a>
+    </nav>
+  </header>
+  <meta charset="utf-8" />
+  <title>Text Wizard — Cursed Text</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #f1d7b3;
+      --fg: #6b4400c2;
+      --card: #fff;
+      --muted: #666;
+      --accent: #6b4400;
+      --shadow: rgba(0,0,0,0.06);
+    }
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 28px;
+      text-align: center;
+    }
+    header{ max-width: 900px; margin: 0 auto 18px auto; }
+    nav { margin-bottom: 18px; }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      font-weight: 600;
+    }
+    .card {
+      display: inline-block;
+      width: 92%;
+      max-width: 980px;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 6px var(--shadow);
+      text-align: left;
+    }
+    h1 { margin: 4px 0 8px 0; font-size: 22px; }
+    p.lead { color: var(--muted); margin-top: 0; }
+    label { display:block; margin-top: 12px; font-weight:600; color:var(--accent); }
+    textarea { width:100%; height:120px; font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; box-sizing:border-box; resize:vertical; }
+    .controls { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    button, .select, input[type="range"] {
+      padding:8px 12px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      background:#fff;
+      cursor:pointer;
+      font-size:14px;
+    }
+    /* reserve space for the percentage so the slider doesn't jump when the number grows */
+    .sliderGroup{ display:flex; align-items:center; gap:8px; width:160px; }
+    .sliderGroup input[type="range"]{ flex:1; min-width:70px; }
+    #dotVal {
+      display: inline-block;
+      width: 4ch;           /* fixed space for values up to "100%" */
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums; /* helps digits keep consistent width */
+    }
+    .inline { display:inline-flex; align-items:center; gap:8px; }
+    .output {
+      margin-top:14px;
+      padding:12px;
+      min-height:60px;
+      font-size:18px;
+      background:#fafafa;
+      border-radius:6px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      box-shadow:0 1px 3px var(--shadow);
+    }
+    .meta { margin-top:10px; color:var(--muted); font-size:13px; }
+    .debug { margin-top:8px; color:#b33; font-size:13px; }
+    footer { margin-top:12px; color:var(--muted); font-size:13px; }
+    @media (max-width:600px){
+      .controls { flex-direction:column; }
+      button { width:100%; }
+    }
+
+    /* Documentation visuals */
+    details.doc { margin: 12px auto; max-width: 980px; text-align:left; }
+    details.doc summary { font-weight:700; color:var(--accent); cursor:pointer; }
+    details.doc pre { background:#f9f6f0; padding:12px; border-radius:6px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>Text to Cursed Text Translator</h1>
+  <p>Type text and click <strong>Translate</strong> (or press <em>Ctrl/Cmd + Enter</em>)</p>
+
+  <!-- Visible, very detailed documentation for new programmers. -->
+  <div class="card">
+    <label for="inputText">Input</label>
+    <textarea id="inputText" placeholder="Try: This text is going to be cursed! "></textarea>
+
+    <div class="controls">
+      <div class="inline">
+        <button id="translateBtn">Translate</button>
+        <button id="copyBtn">Copy</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <div style="margin-left:12px; display:flex; align-items:center; gap:8px;">
+        <div class="sliderGroup">
+          <label for="dotMs" style="margin:0; font-weight:600; color:var(--accent);">Cursed level</label>
+          <input id="dotMs" type="range" min="10" max="100" value="50" />
+          <span id="dotVal">10%</span>
+        </div>
+      </div>
+    </div>
+
+    <label>Output</label>
+    <div class="output" id="output" aria-live="polite">Translated text will appear here.</div>
+    <div class="debug" id="debug" aria-live="polite"></div>
+    <div class="meta">Tip: increase the <strong>Cursed level</strong> to add more combining marks. Very high values can make text hard to copy.</div>
+  </div>
+
+<script>
+  // =========================
+  // ZALGO / COMBINING MARKS
+  // =========================
+  // These arrays contain Unicode combining characters. Each one is a codepoint
+  // that does not appear as a standalone glyph but instead "combines" with
+  // the preceding visible character to draw accents, dots, tildes, lines, etc.
+  // We separate them into three groups:
+  //  - zalgoUp: marks that visually sit above the character
+  //  - zalgoMid: marks that strike through or sit in the middle
+  //  - zalgoDown: marks that sit below the character
+  // By randomly selecting marks from each group and appending them to letters,
+  // we achieve the "cursed" or "zalgo" effect.
+  const zalgoUp = [
+    '\u030d','\u030e','\u0304','\u0305','\u033f','\u0311','\u0306','\u0310',
+    '\u0352','\u0357','\u0351','\u0307','\u0308','\u030a','\u0342','\u0343',
+    '\u0344','\u034a','\u034b','\u034c','\u0303','\u0302','\u030c','\u0350',
+    '\u0300','\u0301','\u030b','\u030f','\u0312','\u0313','\u0314','\u033d',
+    '\u0309','\u0363','\u0364','\u0365','\u0366','\u0367','\u0368','\u0369',
+    '\u036a','\u036b','\u036c','\u036d','\u036e','\u036f'
+  ];
+  const zalgoMid = [
+    '\u0315','\u031b','\u0340','\u0341','\u0358','\u0321','\u0322','\u0327',
+    '\u0328','\u0334','\u0335','\u0336','\u034f','\u035c','\u035d','\u035e',
+    '\u035f','\u0360','\u0362','\u0338','\u0337','\u0361','\u0489'
+  ];
+  const zalgoDown = [
+    '\u0316','\u0317','\u0318','\u0319','\u031c','\u031d','\u031e','\u031f',
+    '\u0320','\u0324','\u0325','\u0326','\u0329','\u032a','\u032b','\u032c',
+    '\u032d','\u032e','\u032f','\u0330','\u0331','\u0332','\u0333','\u0339',
+    '\u033a','\u033b','\u033c','\u0345','\u0347','\u0348','\u0349','\u034d',
+    '\u034e','\u0353','\u0354','\u0355','\u0356','\u0359','\u035a','\u0323'
+  ];
+
+  // =========================
+  // HELPER FUNCTIONS
+  // =========================
+  /**
+   * randomZalgoMarks(arr, count)
+   * - arr: array of combining marks to pick from
+   * - count: how many marks to append
+   * returns a string composed of 'count' randomly selected marks
+   *
+   * This is a small utility used by the main conversion function.
+   */
+  function randomZalgoMarks(arr, count) {
+    let marks = "";
+    for (let i = 0; i < count; i++) {
+      marks += arr[Math.floor(Math.random() * arr.length)];
+    }
+    return marks;
+  }
+
+  /**
+   * charToCursed(char, strengthRaw)
+   * - char: a single character to transform
+   * - strengthRaw: raw numeric value from the slider (40..300)
+   *
+   * This function decides how "cursed" a single character becomes. It:
+   *  1. Normalizes the slider value to a 0..1 range (named 'norm').
+   *  2. Uses 'norm' to determine maximum possible marks above/mid/below.
+   *  3. Randomly selects an actual count for each group (so output varies).
+   *  4. Caps the total number of marks per character so we don't create
+   *     absurdly long outputs (configurable via totalCap).
+   */
+  function charToCursed(char, strengthRaw) {
+    if (char === ' ') return ' ';
+
+    // Map slider range to a normalized 0..1 value for smooth control.
+    const sliderElem = document.getElementById('dotMs');
+    const min = parseInt(sliderElem.min, 10);
+    const max = parseInt(sliderElem.max, 10); // these are the slider's min/max attributes
+    const norm = Math.max(0, Math.min(1, (strengthRaw - min) / (max - min)));
+
+    // Based on 'norm', compute the maximum marks we might add.
+    // Increase these multipliers to make the text heavier for the same slider.
+    const maxUpDown = Math.round(1 + norm * 8); // roughly 1..9
+    const maxMid = Math.round(0 + norm * 4);    // roughly 0..4
+
+    // Choose random counts so the output feels organic
+    let upCount = Math.floor(Math.random() * (maxUpDown + 1));
+    let midCount = Math.floor(Math.random() * (maxMid + 1));
+    let downCount = Math.floor(Math.random() * (maxUpDown + 1));
+
+    // Cap total marks per character to avoid extremely long strings and
+    // keep the UI responsive. You can increase totalCap if you want more.
+    const totalCap = 25;
+    const total = upCount + midCount + downCount;
+    if (total > totalCap) {
+      const factor = totalCap / total;
+      upCount = Math.floor(upCount * factor);
+      midCount = Math.floor(midCount * factor);
+      downCount = Math.floor(downCount * factor);
+    }
+
+    // Build the final string for this character
+    return char
+      + randomZalgoMarks(zalgoUp, upCount)
+      + randomZalgoMarks(zalgoMid, midCount)
+      + randomZalgoMarks(zalgoDown, downCount);
+  }
+
+  /**
+   * toCursed(str, strengthRaw)
+   * - str: the whole input string
+   * - strengthRaw: raw value from the slider
+   *
+   * Loops through each character and applies charToCursed to build the
+   * entire transformed string.
+   */
+  function toCursed(str, strengthRaw) {
+    let out = '';
+    for (let ch of str) {
+      out += charToCursed(ch, strengthRaw);
+    }
+    return out;
+  }
+
+  // =========================
+  // UI WIRING
+  // =========================
+  // Grab references to the DOM elements we will interact with.
+  const inputText = document.getElementById('inputText');
+  const translateBtn = document.getElementById('translateBtn');
+  const output = document.getElementById('output');
+  const debug = document.getElementById('debug');
+  const slider = document.getElementById('dotMs');
+  const sliderVal = document.getElementById('dotVal');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  /**
+   * render()
+   * - Reads the input text and slider value, converts the text using
+   *   toCursed(), and writes the result to the output area.
+   * - Also updates a small debug line with length and raw cursed-level.
+   */
+  function render() {
+    const text = inputText.value || '';
+    const strength = parseInt(slider.value, 10);
+
+    // If there's no input, show placeholder text and clear debug.
+    if (!text.trim()) {
+      output.textContent = 'Translated text will appear here.';
+      debug.textContent = '';
+      return;
+    }
+
+    // Compute cursed output and update the UI
+    const cursed = toCursed(text, strength);
+    output.textContent = cursed;
+    debug.textContent = `Length: ${cursed.length} chars — Cursed level: ${strength}`;
+  }
+
+  /**
+   * updateSliderLabel()
+   * - Updates the visual percentage next to the slider. The slider's
+   *   numeric range (40..300) is mapped to 0..100% for user-friendliness.
+   * - The label element has a fixed width in CSS so changing digits won't
+   *   shift other elements on the row.
+   */
+  function updateSliderLabel() {
+    const val = parseInt(slider.value, 10);
+    // Show the raw slider value as percentage so minimum can be e.g. 10%.
+    sliderVal.textContent = `${val}%`;
+  }
+
+  // Set the initial percentage label when the page loads
+  updateSliderLabel();
+
+  // --- Event listeners ---
+  translateBtn.addEventListener('click', () => { render(); });
+
+  // Live preview while moving the slider
+  slider.addEventListener('input', () => {
+    updateSliderLabel();
+    render();
+  });
+
+  // Keyboard shortcut: Ctrl/Cmd + Enter triggers translation
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      render();
+    }
+  });
+
+  // Copy the output text to clipboard using the Clipboard API. If it
+  // fails (older browsers or blocked permissions), the catch will show
+  // a helpful message in the debug area.
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      debug.textContent = 'Copied to clipboard.';
+    } catch (err) {
+      debug.textContent = 'Copy failed — try selecting the output and pressing Ctrl/Cmd+C.';
+    }
+  });
+
+  // Clear input and reset outputs
+  clearBtn.addEventListener('click', () => {
+    inputText.value = '';
+    output.textContent = 'Translated text will appear here.';
+    debug.textContent = '';
+  });
+
+  // Debounced live preview while typing to avoid heavy CPU when the user
+  // types quickly or pastes very long text. The timeout is intentionally
+  // short so the preview feels responsive.
+  let typingTimer = null;
+  inputText.addEventListener('input', () => {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(render, 120);
+  });
+
+  // If the textarea contains content on page load, render once so the
+  // output shows immediately.
+  if (inputText.value.trim()) render();
+</script>
+</body>
+</html>
