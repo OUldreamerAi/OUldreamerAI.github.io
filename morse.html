@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Text → Morse Translator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #f1d7b3;
+      --fg: #6b4400c2;
+      --card: #fff;
+      --muted: #666;
+      --accent: #6b4400;
+      --shadow: rgba(0,0,0,0.06);
+    }
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 28px;
+      text-align: center;
+    }
+    header{ max-width: 900px; margin: 0 auto 18px auto; }
+    nav { margin-bottom: 18px; }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      font-weight: 600;
+    }
+    .card {
+      display: inline-block;
+      width: 92%;
+      max-width: 980px;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 6px var(--shadow);
+      text-align: left;
+    }
+    h1 { margin: 4px 0 8px 0; font-size: 22px; }
+    p.lead { color: var(--muted); margin-top: 0; }
+    label { display:block; margin-top: 12px; font-weight:600; color:var(--accent); }
+    textarea { width:100%; height:120px; font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; box-sizing:border-box; resize:vertical; }
+    .controls { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    button, .select, input[type="range"] {
+      padding:8px 12px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      background:#fff;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .inline {
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .output {
+      margin-top:14px;
+      padding:12px;
+      min-height:60px;
+      font-size:18px;
+      background:#fafafa;
+      border-radius:6px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      box-shadow:0 1px 3px var(--shadow);
+    }
+    .meta { margin-top:10px; color:var(--muted); font-size:13px; }
+    .debug { margin-top:8px; color:#b33; font-size:13px; }
+    footer { margin-top:12px; color:var(--muted); font-size:13px; }
+    @media (max-width:600px){
+      .controls { flex-direction:column; }
+      button { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Emoji</a> 
+      <a href="morse.html" aria-current="page">Morse</a>
+      <a href="weird.html">Weird</a> 
+    </nav>
+  </header>
+
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Text → Morse Translator</h1>
+    <p class="lead">
+      Convert normal text into International Morse code. Type text (letters, numbers, punctuation) and click <strong>Translate</strong>. Use <kbd>Ctrl/Cmd + Enter</kbd> as a shortcut.
+    </p>
+
+    <label for="inputText">Input text</label>
+    <textarea id="inputText" placeholder="Type something like: Hello world."></textarea>
+
+    <div class="controls" role="region" aria-label="controls">
+      <div class="inline">
+        <button id="translateBtn">Translate</button>
+        <button id="decodeBtn" title="Decode Morse to text">Decode (Morse → Text)</button>
+        <button id="clearBtn" title="Clear input">Clear</button>
+      </div>
+
+      <div class="inline" style="margin-left:auto;">
+        <label for="dotMs" style="margin:0;">Speed (dot ms)</label>
+        <input id="dotMs" type="range" min="40" max="300" value="100" />
+        <span id="dotVal">100ms</span>
+      </div>
+
+      <div class="inline">
+        <button id="playBtn" title="Play Morse audio">Play Audio</button>
+        <button id="copyBtn" title="Copy result">Copy</button>
+      </div>
+    </div>
+
+    <label for="output">Result</label>
+    <div id="output" class="output" role="status" aria-live="polite">Result appears here.</div>
+
+    <div class="meta">
+      Rules: letters/numbers map to Morse; letters are separated by spaces; words are separated by <code>/</code> (slash). Unknown characters are shown as <code>?</code>.
+    </div>
+    <div id="debug" class="debug" aria-live="polite"></div>
+
+    <footer>
+      Tip: use <kbd>Ctrl/Cmd + Enter</kbd> while typing to trigger translate. This is a static, client-side tool suitable for GitHub Pages.
+    </footer>
+  </main>
+
+<script>
+/* ========== Morse mapping (International Morse) ========== */
+const MORSE_MAP = {
+  "a":".-","b":"-...","c":"-.-.","d":"-..","e":".","f":"..-.","g":"--.","h":"....",
+  "i":"..","j":".---","k":"-.-","l":".-..","m":"--","n":"-.","o":"---","p":".--.",
+  "q":"--.-","r":".-.","s":"...","t":"-","u":"..-","v":"...-","w":".--","x":"-..-",
+  "y":"-.--","z":"--..",
+  "0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....",
+  "6":"-....","7":"--...","8":"---..","9":"----.",
+  ".":".-.-.-", ",":"--..--", "?":"..--..", "'":".----.", "!":"-.-.--",
+  "/":"-..-.", "(":"-.--.", ")":"-.--.-", "&":".-...", ":":"---...", ";":"-.-.-.",
+  "=":"-...-", "+":".-.-.", "-":"-....-", "_":"..--.-", "\"":".-..-.", "$":"...-..-","@":".--.-."
+};
+
+/* build inverse map */
+const TEXT_MAP = Object.entries(MORSE_MAP).reduce((acc, [k,v])=>{
+  acc[v] = k;
+  return acc;
+}, {});
+
+/* DOM */
+const inputEl = document.getElementById('inputText');
+const btnTranslate = document.getElementById('translateBtn');
+const btnDecode = document.getElementById('decodeBtn');
+const btnClear = document.getElementById('clearBtn');
+const btnCopy = document.getElementById('copyBtn');
+const btnPlay = document.getElementById('playBtn');
+const outputEl = document.getElementById('output');
+const debugEl = document.getElementById('debug');
+const dotRange = document.getElementById('dotMs');
+const dotVal = document.getElementById('dotVal');
+
+/* helpers */
+function showDebug(msg){
+  debugEl.textContent = msg || '';
+}
+function sanitizeInput(s){ return s.replace(/\r/g,'').trim(); }
+
+/* Convert normal text to Morse */
+function textToMorse(text){
+  text = sanitizeInput(text);
+  if(text.length === 0) return '';
+  // split by whitespace into words; preserve punctuation within words
+  const words = text.split(/\s+/);
+  const morseWords = words.map(word=>{
+    const letters = [];
+    for(let ch of word){
+      const lower = ch.toLowerCase();
+      if(MORSE_MAP.hasOwnProperty(lower)) letters.push(MORSE_MAP[lower]);
+      else {
+        // unknown char -> question mark as placeholder
+        letters.push('?');
+      }
+    }
+    return letters.join(' ');
+  });
+  return morseWords.join(' / ');
+}
+
+/* Convert Morse to normal text */
+function morseToText(morse){
+  morse = sanitizeInput(morse);
+  if(morse.length === 0) return '';
+  // allow either "/" or " / " as word separator
+  const words = morse.split(/\s*\/\s*/);
+  const textWords = words.map(w=>{
+    if(w.trim().length === 0) return '';
+    const letters = w.trim().split(/\s+/);
+    return letters.map(l => TEXT_MAP[l] || '?').join('');
+  });
+  return textWords.join(' ');
+}
+
+/* UI wiring */
+btnTranslate.addEventListener('click', ()=> {
+  try {
+    const txt = inputEl.value;
+    const result = textToMorse(txt);
+    outputEl.textContent = result || '(empty)';
+    showDebug('');
+  } catch(e){
+    showDebug('Translate error: ' + e.message);
+  }
+});
+
+btnDecode.addEventListener('click', ()=> {
+  try {
+    const txt = inputEl.value;
+    const result = morseToText(txt);
+    outputEl.textContent = result || '(empty)';
+    showDebug('');
+  } catch(e){
+    showDebug('Decode error: ' + e.message);
+  }
+});
+
+btnClear.addEventListener('click', ()=>{
+  inputEl.value = '';
+  outputEl.textContent = 'Result appears here.';
+  showDebug('');
+});
+
+btnCopy.addEventListener('click', async ()=>{
+  const text = outputEl.textContent || '';
+  try {
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    } else {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    showDebug('Copied to clipboard.', false);
+  } catch(err){
+    showDebug('Copy failed: ' + err.message);
+  }
+});
+
+/* keyboard: Ctrl/Cmd + Enter triggers translate */
+inputEl.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault();
+    btnTranslate.click();
+  }
+});
+
+/* speed slider UI */
+dotRange.addEventListener('input', ()=>{
+  dotVal.textContent = dotRange.value + 'ms';
+});
+
+/* ==== audio playback (WebAudio) ==== */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+/* play one beep of given duration (ms) */
+function beep(ms, freq=600){
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime); // avoid click
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  const now = audioCtx.currentTime;
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.001);
+  osc.start(now);
+  gain.gain.setValueAtTime(0.25, now + ms/1000 - 0.02);
+  gain.gain.linearRampToValueAtTime(0.0001, now + ms/1000);
+  osc.stop(now + ms/1000 + 0.01);
+}
+
+/* Play a morse string like ".- -..." with spaces between letters and "/" between words */
+async function playMorse(morse){
+  if(!morse || morse.length === 0) return;
+  const dot = parseInt(dotRange.value, 10); // ms for dot
+  const dash = dot * 3;
+  const intra = dot;        // between elements of same letter
+  const interLetter = dot * 3; // between letters
+  const interWord = dot * 7;   // between words
+
+  // normalize morse: ensure single spaces between letters and ' / ' between words
+  const normalized = morse.replace(/\s*\/\s*/g, ' / ').replace(/\s+/g, ' ').trim();
+  // sequence of tokens (., -, /, and spaces)
+  // We'll step through characters and schedule beeps
+  for(let i=0;i<normalized.length;i++){
+    const ch = normalized[i];
+    if(ch === '.'){
+      beep(dot);
+      await sleep(dot + intra);
+    } else if(ch === '-'){
+      beep(dash);
+      await sleep(dash + intra);
+    } else if(ch === ' '){
+      // inter-letter gap: we've already waited intra after element; ensure interLetter
+      await sleep(interLetter - intra);
+    } else if(ch === '/'){
+      // inter-word gap
+      await sleep(interWord - intra);
+    } else {
+      // unknown char -> short pause
+      await sleep(dot);
+    }
+  }
+}
+
+/* small sleep helper */
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+/* play button */
+btnPlay.addEventListener('click', async ()=>{
+  try {
+    const content = outputEl.textContent || '';
+    if(!content || content.trim().length === 0 || content.trim()==='(empty)'){
+      showDebug('Nothing to play. Translate text first.', true);
+      return;
+    }
+    await playMorse(content.trim());
+    showDebug('', false);
+  } catch(e){
+    showDebug('Audio play failed: ' + e.message);
+  }
+});
+
+/* init */
+(function init(){
+  // quick accessibility hint
+  showDebug('', false);
+})();
+</script>
+</body>
+</html>
