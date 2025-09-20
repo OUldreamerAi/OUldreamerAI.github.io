@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <header>
-    <nav>
-      <a href="index.html">Text → Emoji</a> 
-      <a href="morse.html">Morse ←→ Text</a>
-      <a href="weird.html">Text → Weird Text</a>
-      <a href="cursed.html"aria-current="page">Text → Cursed Text </a>
-    </nav>
-  </header>
+
   <meta charset="utf-8" />
   <title>Text Wizard — Cursed Text</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -29,24 +22,91 @@
       padding: 28px;
       text-align: center;
     }
-    header{ max-width: 900px; margin: 0 auto 18px auto; }
-    nav { margin-bottom: 18px; }
-    nav a {
+        header.site-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 0 18px 0;
+      position:relative;
+    }
+
+    header.site-header::before{
+      content:"";
+      position:absolute;
+      left:-40px;
+      top:-20px;
+      width:160px;
+      height:160px;
+      background: radial-gradient(circle at 30% 30%, rgba(107,68,0,0.12), transparent 30%), radial-gradient(circle at 70% 70%, rgba(255,255,255,0.06), transparent 20%);
+      border-radius:48% 52% 40% 60% / 55% 42% 58% 45%;
+      transform: rotate(-12deg);
+      filter: blur(8px);
+      pointer-events:none;
+    }
+
+    .brand-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      font-family: 'Palatino', 'Georgia', serif;
+      color:var(--accent);
+      font-size:var(--brand-size);
+      text-decoration:none;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+    }
+
+    .brand-title .rune{
+      width:36px;height:36px;border-radius:8px;
+      background:linear-gradient(180deg, rgba(107,68,0,0.12), rgba(255,255,255,0.5));
+      border:1px solid rgba(107,68,0,0.06);
+      display:inline-block;
+      transform: rotate(-12deg);
+      box-shadow: 0 6px 18px rgba(107,68,0,0.06);
+      position:relative;
+      overflow:hidden;
+    
+
+     nav a {
       color: var(--accent);
       text-decoration: none;
       margin: 0 8px;
       font-weight: 600;
+      padding:6px 10px;
+      border-radius:8px;
+      transition: all .15s ease;
+      background: transparent;
     }
+    nav a[aria-current="page"]{ background: rgba(107,68,0,0.08); }
+    nav a:hover{ transform:translateY(-2px); box-shadow: 0 4px 12px rgba(107,68,0,0.06); }
+
     .card {
       display: inline-block;
       width: 92%;
       max-width: 980px;
       background: var(--card);
-      border-radius: 8px;
-      padding: 18px;
-      box-shadow: 0 1px 6px var(--shadow);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 6px 20px var(--shadow);
       text-align: left;
+      border: 1px solid rgba(0,0,0,0.03);
+      position:relative;
+      overflow:visible;
     }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      right:-22px;
+      bottom:-22px;
+      width:84px;
+      height:204px;
+      background: linear-gradient(180deg, rgba(107,68,0,0.08), rgba(107,68,0,0.02));
+      border-radius:50%;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
     h1 { margin: 4px 0 8px 0; font-size: 22px; }
     p.lead { color: var(--muted); margin-top: 0; }
     label { display:block; margin-top: 12px; font-weight:600; color:var(--accent); }
@@ -60,35 +120,14 @@
       cursor:pointer;
       font-size:14px;
     }
-    /* reserve space for the percentage so the slider doesn't jump when the number grows */
     .sliderGroup{ display:flex; align-items:center; gap:8px; width:160px; }
     .sliderGroup input[type="range"]{ flex:1; min-width:70px; }
-    #dotVal {
-      display: inline-block;
-      width: 4ch;           /* fixed space for values up to "100%" */
-      text-align: right;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums; /* helps digits keep consistent width */
-    }
+    #dotVal { display: inline-block; width: 4ch; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
     .inline { display:inline-flex; align-items:center; gap:8px; }
-    .output {
-      margin-top:14px;
-      padding:12px;
-      min-height:60px;
-      font-size:18px;
-      background:#fafafa;
-      border-radius:6px;
-      white-space:pre-wrap;
-      word-break:break-word;
-      box-shadow:0 1px 3px var(--shadow);
-    }
+    .output { margin-top:14px; padding:12px; min-height:60px; font-size:18px; background:#fafafa; border-radius:6px; white-space:pre-wrap; word-break:break-word; box-shadow:0 1px 3px var(--shadow); }
     .meta { margin-top:10px; color:var(--muted); font-size:13px; }
     .debug { margin-top:8px; color:#b33; font-size:13px; }
     footer { margin-top:12px; color:var(--muted); font-size:13px; }
-    @media (max-width:600px){
-      .controls { flex-direction:column; }
-      button { width:100%; }
-    }
 
     /* Documentation visuals */
     details.doc { margin: 12px auto; max-width: 980px; text-align:left; }
@@ -97,6 +136,19 @@
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header class="site-header">
+      <div class="brand-title">
+        <span class="title-text">Text Wizard</span>
+      </div>
+      <nav aria-label="Main navigation">
+        <a href="index.html">Text → Emoji</a>
+        <a href="morse.html">Morse ←→ Text</a>
+        <a href="weird.html">Text → Weird Text</a>
+        <a href="cursed.html" aria-current="page">Text → Cursed Text</a>
+      </nav>
+    </header>
+
   <h1>Text to Cursed Text Translator</h1>
   <p>Type text and click <strong>Translate</strong> (or press <em>Ctrl/Cmd + Enter</em>)</p>
 
