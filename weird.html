@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Text → Weird Text translator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #f1d7b3;
+      --fg: #6b4400c2;
+      --card: #fff;
+      --muted: #666;
+      --accent: #6b4400;
+      --shadow: rgba(0,0,0,0.06);
+    }
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      margin: 0;
+      padding: 28px;
+      text-align: center;
+    }
+    header{ max-width: 900px; margin: 0 auto 18px auto; }
+    nav { margin-bottom: 18px; }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      font-weight: 600;
+    }
+    .card {
+      display: inline-block;
+      width: 92%;
+      max-width: 980px;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 6px var(--shadow);
+      text-align: left;
+    }
+    h1 { margin: 4px 0 8px 0; font-size: 22px; }
+    p.lead { color: var(--muted); margin-top: 0; }
+    label { display:block; margin-top: 12px; font-weight:600; color:var(--accent); }
+    textarea { width:100%; height:120px; font-size:16px; padding:10px; border-radius:6px; border:1px solid #ddd; box-sizing:border-box; resize:vertical; }
+    .controls { margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    button, .select, input[type="range"] {
+      padding:8px 12px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      background:#fff;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .inline {
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .output {
+      margin-top:14px;
+      padding:12px;
+      min-height:60px;
+      font-size:18px;
+      background:#fafafa;
+      border-radius:6px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      box-shadow:0 1px 3px var(--shadow);
+    }
+    .meta { margin-top:10px; color:var(--muted); font-size:13px; }
+    .debug { margin-top:8px; color:#b33; font-size:13px; }
+    footer { margin-top:12px; color:var(--muted); font-size:13px; }
+    @media (max-width:600px){
+      .controls { flex-direction:column; }
+      button { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Emoji</a> 
+      <a href="morse.html" aria-current="page">Morse</a>
+      <a href="weird.html">Weird Text</a>
+    </nav>
+  </header>
+<body>
+  <h1>Weird Text Translator 🌀</h1>
+  <p>Type normal text and click a style button to make it weird!</p>
+
+  <textarea id="inputText" placeholder="Try: hello world"></textarea><br>
+  <button id="btnUpside">Upside Down</button>
+  <button id="btnSmallcaps">Small Caps</button>
+  <button id="btnWide">Full Width</button>
+  <button id="btnClear">Clear</button>
+
+  <div class="output" id="output">Translated text will appear here.</div>
+  <div class="debug" id="debug"></div>
+
+<script>
+  // -------------------------
+  // Helper: show debug messages
+  function showDebug(msg){
+    document.getElementById('debug').textContent = msg || '';
+  }
+
+  // Upside-down map (not all chars have mappings, so fallback is original)
+  const upsideMap = {
+    'a':'ɐ','b':'q','c':'ɔ','d':'p','e':'ǝ','f':'ɟ','g':'ƃ','h':'ɥ','i':'ᴉ','j':'ɾ',
+    'k':'ʞ','l':'ʃ','m':'ɯ','n':'u','o':'o','p':'d','q':'b','r':'ɹ','s':'s','t':'ʇ',
+    'u':'n','v':'ʌ','w':'ʍ','x':'x','y':'ʎ','z':'z',
+    'A':'∀','B':'𐐒','C':'Ɔ','D':'p','E':'Ǝ','F':'Ⅎ','G':'פ','H':'H','I':'I','J':'ſ',
+    'K':'ʞ','L':'˥','M':'W','N':'N','O':'O','P':'Ԁ','Q':'Ό','R':'ᴚ','S':'S','T':'⊥',
+    'U':'∩','V':'Λ','W':'M','X':'X','Y':'⅄','Z':'Z',
+    '1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6','0':'0',
+    '.':'˙',',':'\'','\'':',','"':',,','_':'‾',';':'؛','!':'¡','?':'¿'
+  };
+
+  function toUpsideDown(text){
+    return text.split("").reverse().map(ch => upsideMap[ch] || ch).join("");
+  }
+
+  // Small caps style (using Unicode small caps)
+  const smallMap = {
+    'a':'ᴀ','b':'ʙ','c':'ᴄ','d':'ᴅ','e':'ᴇ','f':'ғ','g':'ɢ','h':'ʜ','i':'ɪ','j':'ᴊ',
+    'k':'ᴋ','l':'ʟ','m':'ᴍ','n':'ɴ','o':'ᴏ','p':'ᴘ','q':'ǫ','r':'ʀ','s':'s','t':'ᴛ',
+    'u':'ᴜ','v':'ᴠ','w':'ᴡ','x':'x','y':'ʏ','z':'ᴢ'
+  };
+  function toSmallcaps(text){
+    return text.split("").map(ch => smallMap[ch.toLowerCase()] || ch).join("");
+  }
+
+  // Fullwidth text (each letter is shifted into Unicode fullwidth block)
+  function toFullwidth(text){
+    return text.split("").map(ch => {
+      const code = ch.charCodeAt(0);
+      if (code >= 33 && code <= 126) {
+        return String.fromCharCode(0xFF00 + code - 0x20);
+      }
+      return ch;
+    }).join("");
+  }
+
+  // Hook up buttons
+  document.getElementById('btnUpside').addEventListener('click', ()=>{
+    const input = document.getElementById('inputText').value;
+    document.getElementById('output').textContent = toUpsideDown(input);
+    showDebug('');
+  });
+
+  document.getElementById('btnSmallcaps').addEventListener('click', ()=>{
+    const input = document.getElementById('inputText').value;
+    document.getElementById('output').textContent = toSmallcaps(input);
+    showDebug('');
+  });
+
+  document.getElementById('btnWide').addEventListener('click', ()=>{
+    const input = document.getElementById('inputText').value;
+    document.getElementById('output').textContent = toFullwidth(input);
+    showDebug('');
+  });
+
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    document.getElementById('inputText').value = '';
+    document.getElementById('output').textContent = 'Translated text will appear here.';
+  });
+</script>
+
+</body>
+</html>
+
+
+  
