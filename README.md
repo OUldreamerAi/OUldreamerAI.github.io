@@ -11,6 +11,35 @@ Live demo: [https://ouldreamerai.github.io/](https://ouldreamerai.github.io/)
 
 ---
 
+Emoji data sourced from Unicode Consortium's Emoji 13.0 dataset.
+##  Contributions and Credits
+
+This project contains work from multiple sources. Here's a breakdown:
+
+- **Created by Me:**  
+  - **HTML structure and layout** for all three translators (`index.html`, `morse.html`, `weird.html`)  
+    - Built the basic page design with headings, text areas, buttons, and output sections.  
+  - **Custom CSS styling** for layout and buttons  
+    - Defined fonts, colors, padding, and responsive design to make the pages look clean and user-friendly.  
+    - Styled the output areas, buttons, and overall page background to match each translator’s theme.  
+  - **JavaScript logic for the Weird Text Translator** (`weird.html`)  
+    - Wrote the transformation functions for Upside Down, Small Caps, and Full Width text.  
+    - Implemented button handling to switch between transformations instantly.  
+    - Added Clear/Reset functionality for the input and output boxes.  
+  - **JavaScript functions for the Emoji Translator** (`index.html`)  
+    - Coded the translation process that takes user input, splits it into words/tokens, and replaces matches with emojis.  
+    - Handled punctuation correctly so that words like `cat.` still translate into an emoji.  
+    - Added a keyboard shortcut (`Ctrl/Cmd + Enter`) for quick translation.  
+    - Connected the translator to an external emoji dictionary JSON file.  
+
+- **AI-Assisted:**  
+  - Code snippets and logic suggestions to improve readability and maintainability  
+
+- **External Resources / References:**  
+  - Emoji dictionary file (`text_to_emoji.json`) was created from Unicode Consortium's Emoji 13.0 dataset.
+
+---
+
 ## Features
 
 ### Emoji Translator
@@ -36,11 +65,12 @@ Live demo: [https://ouldreamerai.github.io/](https://ouldreamerai.github.io/)
 ---
 
 ## Project Structure
-- index.html # Emoji Translator (default homepage)
-- morse.html # Morse Code Translator
-- weird.html # Weird Text Translator
-- text_to_emoji.json # Dictionary of words → emojis
-- README.md # Project documentation
+
+index.html # Emoji Translator (default homepage)
+morse.html # Morse Code Translator
+weird.html # Weird Text Translator
+text_to_emoji.json # Dictionary of words → emojis
+README.md # Project documentation
 
 ---
 
