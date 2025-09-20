@@ -44,31 +44,6 @@ README.md # Project documentation
 
 ---
 
-## How It Works
-
-1. **HTML** provides the user interface:
-   - A `<textarea>` where users can type text. 
-   - Buttons for actions (Translate, Copy, Clear, Style selection).  
-   - A result `<div>` to display the translated text.  
-
-2. **JavaScript** handles the logic:
-   - Emoji Translator:
-     - Loads `text_to_emoji.json` with `fetch()`. 
-     - Splits input into tokens, replaces matches with emojis.  
-   - Morse Translator:
-     - Maps each character (A–Z, 0–9) to its Morse code equivalent.  
-     - Builds the output string by joining converted characters.  
-   - Weird Text Translator:
-     - Uses lookup tables for special Unicode characters.  
-     - Applies transformations depending on the button clicked.  
-
-3. **CSS** makes the interface clean and user-friendly:
-   - Responsive text areas and buttons.  
-   - Centered layout with styled outputs.  
-   - Light color themes per page.  
-
----
-
 ## Examples
 
 ### Emoji Translator
