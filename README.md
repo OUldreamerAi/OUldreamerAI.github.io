@@ -36,11 +36,11 @@ Live demo: [https://ouldreamerai.github.io/](https://ouldreamerai.github.io/)
 ---
 
 ## Project Structure
-index.html # Emoji Translator (default homepage)
-morse.html # Morse Code Translator
-weird.html # Weird Text Translator
-text_to_emoji.json # Dictionary of words → emojis
-README.md # Project documentation
+- index.html # Emoji Translator (default homepage)
+- morse.html # Morse Code Translator
+- weird.html # Weird Text Translator
+- text_to_emoji.json # Dictionary of words → emojis
+- README.md # Project documentation
 
 ---
 
