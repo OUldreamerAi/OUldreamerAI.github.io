@@ -163,7 +163,7 @@
   </main>
 
 <script>
-/* ========== Morse mapping (International Morse) ========== */
+
 const MORSE_MAP = {
   "a":".-","b":"-...","c":"-.-.","d":"-..","e":".","f":"..-.","g":"--.","h":"....",
   "i":"..","j":".---","k":"-.-","l":".-..","m":"--","n":"-.","o":"---","p":".--.",
@@ -176,13 +176,12 @@ const MORSE_MAP = {
   "=":"-...-", "+":".-.-.", "-":"-....-", "_":"..--.-", "\"":".-..-.", "$":"...-..-","@":".--.-."
 };
 
-/* build inverse map */
+
 const TEXT_MAP = Object.entries(MORSE_MAP).reduce((acc, [k,v])=>{
   acc[v] = k;
   return acc;
 }, {});
 
-/* DOM */
 const inputEl = document.getElementById('inputText');
 const btnTranslate = document.getElementById('translateBtn');
 const btnDecode = document.getElementById('decodeBtn');
@@ -194,17 +193,14 @@ const debugEl = document.getElementById('debug');
 const dotRange = document.getElementById('dotMs');
 const dotVal = document.getElementById('dotVal');
 
-/* helpers */
 function showDebug(msg){
   debugEl.textContent = msg || '';
 }
 function sanitizeInput(s){ return s.replace(/\r/g,'').trim(); }
 
-/* Convert normal text to Morse */
 function textToMorse(text){
   text = sanitizeInput(text);
   if(text.length === 0) return '';
-  // split by whitespace into words; preserve punctuation within words
   const words = text.split(/\s+/);
   const morseWords = words.map(word=>{
     const letters = [];
@@ -212,7 +208,6 @@ function textToMorse(text){
       const lower = ch.toLowerCase();
       if(MORSE_MAP.hasOwnProperty(lower)) letters.push(MORSE_MAP[lower]);
       else {
-        // unknown char -> question mark as placeholder
         letters.push('?');
       }
     }
@@ -221,11 +216,9 @@ function textToMorse(text){
   return morseWords.join(' / ');
 }
 
-/* Convert Morse to normal text */
 function morseToText(morse){
   morse = sanitizeInput(morse);
   if(morse.length === 0) return '';
-  // allow either "/" or " / " as word separator
   const words = morse.split(/\s*\/\s*/);
   const textWords = words.map(w=>{
     if(w.trim().length === 0) return '';
@@ -235,7 +228,6 @@ function morseToText(morse){
   return textWords.join(' ');
 }
 
-/* UI wiring */
 btnTranslate.addEventListener('click', ()=> {
   try {
     const txt = inputEl.value;
@@ -270,7 +262,6 @@ btnCopy.addEventListener('click', async ()=>{
     if(navigator.clipboard && navigator.clipboard.writeText){
       await navigator.clipboard.writeText(text);
     } else {
-      // fallback
       const ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
@@ -284,7 +275,6 @@ btnCopy.addEventListener('click', async ()=>{
   }
 });
 
-/* keyboard: Ctrl/Cmd + Enter triggers translate */
 inputEl.addEventListener('keydown', (e)=>{
   if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
     e.preventDefault();
@@ -292,25 +282,22 @@ inputEl.addEventListener('keydown', (e)=>{
   }
 });
 
-/* speed slider UI */
 dotRange.addEventListener('input', ()=>{
   dotVal.textContent = dotRange.value + 'ms';
 });
 
-/* ==== audio playback (WebAudio) ==== */
 let audioCtx = null;
 function ensureAudio(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
-/* play one beep of given duration (ms) */
 function beep(ms, freq=600){
   ensureAudio();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = 'sine';
   osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime); // avoid click
+  gain.gain.setValueAtTime(0.0001, audioCtx.currentTime); 
   osc.connect(gain);
   gain.connect(audioCtx.destination);
   const now = audioCtx.currentTime;
@@ -321,19 +308,16 @@ function beep(ms, freq=600){
   osc.stop(now + ms/1000 + 0.01);
 }
 
-/* Play a morse string like ".- -..." with spaces between letters and "/" between words */
 async function playMorse(morse){
   if(!morse || morse.length === 0) return;
-  const dot = parseInt(dotRange.value, 10); // ms for dot
+  const dot = parseInt(dotRange.value, 10); 
   const dash = dot * 3;
-  const intra = dot;        // between elements of same letter
-  const interLetter = dot * 3; // between letters
-  const interWord = dot * 7;   // between words
+  const intra = dot;    
+  const interLetter = dot * 3; 
+  const interWord = dot * 7;   
 
-  // normalize morse: ensure single spaces between letters and ' / ' between words
+
   const normalized = morse.replace(/\s*\/\s*/g, ' / ').replace(/\s+/g, ' ').trim();
-  // sequence of tokens (., -, /, and spaces)
-  // We'll step through characters and schedule beeps
   for(let i=0;i<normalized.length;i++){
     const ch = normalized[i];
     if(ch === '.'){
@@ -343,22 +327,17 @@ async function playMorse(morse){
       beep(dash);
       await sleep(dash + intra);
     } else if(ch === ' '){
-      // inter-letter gap: we've already waited intra after element; ensure interLetter
       await sleep(interLetter - intra);
     } else if(ch === '/'){
-      // inter-word gap
       await sleep(interWord - intra);
     } else {
-      // unknown char -> short pause
       await sleep(dot);
     }
   }
 }
 
-/* small sleep helper */
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 
-/* play button */
 btnPlay.addEventListener('click', async ()=>{
   try {
     const content = outputEl.textContent || '';
@@ -373,9 +352,7 @@ btnPlay.addEventListener('click', async ()=>{
   }
 });
 
-/* init */
 (function init(){
-  // quick accessibility hint
   showDebug('', false);
 })();
 </script>
