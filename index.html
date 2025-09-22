@@ -132,26 +132,24 @@
   <div class="hint">Tip: punctuation (like . , ! ?) is handled — try "The sun, moon, and stars!"</div>
 
   <script>
-  // -------------------------
-  // emojiMap: word (lowercase) => emoji
+
   let emojiMap = {};
   const btn = document.getElementById('translateBtn');
-  btn.disabled = true; // disable at start
+  btn.disabled = true; 
 
   fetch("text_to_emoji.json")
     .then(response => response.json())
     .then(data => {
       data.forEach(item => {
-        // use full name instead of just first word for better matches
         let key = item.name.toLowerCase();
         emojiMap[key] = item.char;
       });
-      btn.disabled = false; // enable after loading
+      btn.disabled = false; 
       console.log("Emoji map loaded:", Object.keys(emojiMap).length, "entries");
     })
     .catch(err => console.error("Failed to load emoji dictionary:", err));
 
-  // Helpful small helper to show debug messages on the page
+
   function showDebug(msg, isError = true) {
     const el = document.getElementById('debug');
     el.textContent = msg || '';
@@ -159,18 +157,18 @@
     else if (msg) console.log(msg);
   }
 
-  // Translation function
+
   function translate(text) {
-    // split into words while keeping punctuation as tokens
+
     let tokens = text.toLowerCase().split(/(\b|\s+)/);
     let translated = tokens.map(tok => {
-      let clean = tok.replace(/[.,!?]/g, ""); // strip punctuation for lookup
+      let clean = tok.replace(/[.,!?]/g, "");
       return emojiMap[clean] || tok;
     });
     return translated.join("");
   }
 
-  // wire up UI after DOM loads
+
   (function init() {
     try {
       const btn = document.getElementById('translateBtn');
@@ -182,20 +180,18 @@
         return;
       }
 
-      // button click -> translate
       btn.addEventListener('click', () => {
         try {
           const raw = input.value.trim();
           const translated = translate(raw);
           output.textContent = translated || '(empty)';
-          showDebug('', false); // clear debug on success
+          showDebug('', false); 
           console.log('Translated:', translated);
         } catch (err) {
           showDebug('Translate error: ' + err.message, true);
         }
       });
 
-      // keyboard shortcut: Ctrl/Cmd + Enter to translate
       input.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
           e.preventDefault();
@@ -203,7 +199,6 @@
         }
       });
 
-      // optional: auto-clear debug when user focuses input
       input.addEventListener('focus', () => { showDebug('', false); });
 
       console.log('Text-to-Emoji script loaded successfully.');
