@@ -134,13 +134,10 @@
   <div class="debug" id="debug"></div>
 
 <script>
-  // -------------------------
-  // Helper: show debug messages
   function showDebug(msg){
     document.getElementById('debug').textContent = msg || '';
   }
 
-  // Upside-down map (not all chars have mappings, so fallback is original)
   const upsideMap = {
     'a':'ɐ','b':'q','c':'ɔ','d':'p','e':'ǝ','f':'ɟ','g':'ƃ','h':'ɥ','i':'ᴉ','j':'ɾ',
     'k':'ʞ','l':'ʃ','m':'ɯ','n':'u','o':'o','p':'d','q':'b','r':'ɹ','s':'s','t':'ʇ',
@@ -156,7 +153,6 @@
     return text.split("").reverse().map(ch => upsideMap[ch] || ch).join("");
   }
 
-  // Small caps style (using Unicode small caps)
   const smallMap = {
     'a':'ᴀ','b':'ʙ','c':'ᴄ','d':'ᴅ','e':'ᴇ','f':'ғ','g':'ɢ','h':'ʜ','i':'ɪ','j':'ᴊ',
     'k':'ᴋ','l':'ʟ','m':'ᴍ','n':'ɴ','o':'ᴏ','p':'ᴘ','q':'ǫ','r':'ʀ','s':'s','t':'ᴛ',
@@ -166,7 +162,6 @@
     return text.split("").map(ch => smallMap[ch.toLowerCase()] || ch).join("");
   }
 
-  // Fullwidth text (each letter is shifted into Unicode fullwidth block)
   function toFullwidth(text){
     return text.split("").map(ch => {
       const code = ch.charCodeAt(0);
@@ -178,7 +173,6 @@
   }
 
 
-  // Hook up buttons
 
 
   document.getElementById('btnUpside').addEventListener('click', ()=>{
@@ -200,9 +194,9 @@
   });
 
   document.getElementById('btnCursed').addEventListener('click', () => {
-    const input = document.getElementById('inputText').value;   // get user input
-    document.getElementById('output').textContent = toCursed(input); // apply cursed text
-    showDebug(''); // clear any debug messages, consistent with your other buttons
+    const input = document.getElementById('inputText').value;  
+    document.getElementById('output').textContent = toCursed(input); 
+    showDebug(''); 
   });
 
   document.getElementById('btnClear').addEventListener('click', ()=>{
