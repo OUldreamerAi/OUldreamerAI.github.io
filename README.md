@@ -1,39 +1,52 @@
 # Text Fun Translators
 
 A collection of simple web-based tools built with **HTML, CSS, and JavaScript**.  
-This website currently includes three different text translators:
+This website currently includes four different text translators:
 
 1. **Emoji Translator** – Replace words with emojis using a custom dictionary.  
 2. **Morse Code Translator** – Convert letters and numbers into Morse code.  
-3. **Weird Text Translator** – Transform text into fun Unicode styles (Upside Down, Small Caps, Full Width).  
+3. **Weird Text Translator** – Transform text into fun Unicode styles (Upside Down, Small Caps, Full Width).
+4. **Cursed Text Translator** - Transform text into cursed looking code.
 
 Live demo: [https://ouldreamerai.github.io/](https://ouldreamerai.github.io/)
 
 ---
 
-Emoji data sourced from Unicode Consortium's Emoji 13.0 dataset.
+
 ##  Contributions and Credits
 
 This project contains work from multiple sources. Here's a breakdown:
 
-- **Created by Me:**  
-  - **HTML structure and layout** for all three translators (`index.html`, `morse.html`, `weird.html`)  
-    - Built the basic page design with headings, text areas, buttons, and output sections.  
-  - **Custom CSS styling** for layout and buttons  
-    - Defined fonts, colors, padding, and responsive design to make the pages look clean and user-friendly.  
-    - Styled the output areas, buttons, and overall page background to match each translator’s theme.  
-  - **JavaScript logic for the Weird Text Translator** (`weird.html`)  
-    - Wrote the transformation functions for Upside Down, Small Caps, and Full Width text.  
-    - Implemented button handling to switch between transformations instantly.  
-    - Added Clear/Reset functionality for the input and output boxes.  
-  - **JavaScript functions for the Emoji Translator** (`index.html`)  
-    - Coded the translation process that takes user input, splits it into words/tokens, and replaces matches with emojis.  
-    - Handled punctuation correctly so that words like `cat.` still translate into an emoji.  
-    - Added a keyboard shortcut (`Ctrl/Cmd + Enter`) for quick translation.  
-    - Connected the translator to an external emoji dictionary JSON file.  
+**Created by Me:**  
+- **HTML structure and layout** for all translators (`index.html`, `morse.html`, `weird.html`, `cursed.html`)  
+  - Built the basic page design with headers, navigation, input textareas, control buttons, and output/result sections.  
+
+- **Custom CSS styling**  
+  - Defined fonts, colors, spacing, and responsive rules to create a clean, user-friendly interface.  
+  - Styled output areas, buttons, and page backgrounds so each translator has a distinct theme.
+
+- **JavaScript — Emoji Translator (`index.html`)**  
+  - Loads an emoji dictionary from `text_to_emoji.json` with a small built-in fallback.  
+  - Tokenizes input and performs text → emoji substitutions while preserving punctuation and whitespace.  
+  - Copy-to-clipboard and keyboard shortcut support (Ctrl/Cmd + Enter).
+
+- **JavaScript — Morse Translator (`morse.html`)**  
+  - Bi-directional conversion (text → Morse and Morse → text) using International Morse mapping.  
+  - Normalizes spacing, marks unknown characters with `?`, and displays debug messages.  
+  - Plays Morse audio via Web Audio API with adjustable dot timing.
+
+- **JavaScript — Weird Text Translator (`weird.html`)**  
+  - Implements Unicode-based transforms: Upside-Down, Small Caps, and Full-Width.  
+  - Instant switching via buttons and Clear/Reset functionality for input/output.  
+  - Preserves characters with sensible fallbacks for unmapped glyphs.
+
+- **JavaScript — Cursed (Zalgo) Translator (`cursed.html`)**  
+  - Generates randomized combining-mark (Zalgo) output using up/mid/down mark sets.  
+  - Intensity controlled by a slider with live preview; caps marks per character to avoid freezes.  
+  - Copy and Clear controls included.
 
 - **AI-Assisted:**  
-  - Code snippets and logic suggestions to improve readability and maintainability  
+  - Code snippets and logic suggestions to improve readability and maintainability and some parts of the (`README.md`).
 
 - **External Resources / References:**  
   - Emoji dictionary file (`text_to_emoji.json`) was created from Unicode Consortium's Emoji 13.0 dataset.
@@ -60,7 +73,11 @@ This project contains work from multiple sources. Here's a breakdown:
   - **Small Caps** – converts letters into small capital letters.
   - **Full Width** – converts letters into wide Unicode characters. 
 - Clear button to reset input and output.  
-- Output updates instantly when a style button is clicked.  
+- Output updates instantly when a style button is clicked.
+
+### Cursed Text Translator
+- Transforms letters and numbers into cursed letters and numbers.
+- Uses a slider to determin the cursed level.
 
 ---
 
@@ -71,6 +88,7 @@ morse.html # Morse Code Translator
 weird.html # Weird Text Translator
 text_to_emoji.json # Dictionary of words → emojis
 README.md # Project documentation
+weird.html # Text into Cursed Text Translator
 
 ---
 
@@ -114,24 +132,25 @@ hello world
 
 ---
 
+### Cursed text translator
+**Input:**
+Scary text
+
+**Output:**
+S̠̼̫͓͇̯̘͌͐ͧ̂͌͑c̶ͫ̃̄ͦ̀͋̃ͫá̻̣̝͔͎̫̕͘͜r̷̡̲̲͖͓͕̉̌ͪ̎ͮͩ̉͘͝y̧͉̗͎̰̮̥̺ t̷̢̯̗̘̠͍̔̽̊̉́͢ͅȩ̸̰̽́̀ͥ̓ͨ͐x͉̺̣̩͉͉ͥ̐̑͊̆̆ͧ̏͝t̫̻̜͇͙͔͍̭͉̉̌ͬ̓ͨ͋ͪ̆
+
+---
+
 ## Installation / Usage
 
 1. Clone or download this repository.  
 2. Open any of the HTML files in your browser:  
    - `index.html` → Emoji Translator  
    - `morse.html` → Morse Translator  
-   - `weird.html` → Weird Text Translator  
+   - `weird.html` → Weird Text Translator
+   - `weird.html` → Weird Text Translator 
 3. Or simply visit the **live demo** at:  
    [https://ouldreamerai.github.io/](https://ouldreamerai.github.io/)  
-
----
-
-## Future Ideas
-
-- Add more weird text styles (Zalgo text, cursive/italic, mirror text).  
-- Extend the emoji dictionary with categories (food, animals, emotions).  
-- Add audio playback for Morse code.  
-- Mobile-friendly refinements.  
 
 ---
 
